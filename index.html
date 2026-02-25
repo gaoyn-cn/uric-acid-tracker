@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>尿酸记录</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+        .input-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus {
+            border-color: #4CAF50;
+        }
+        .input-group input[type="date"] {
+            flex: 0.8;
+        }
+        .btn {
+            padding: 14px 24px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+            padding: 10px 16px;
+            font-size: 14px;
+        }
+        .chart-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .chart-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .chart-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            background: #f5f5f5;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chart-tab.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+        .stats-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 12px 8px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        .latest-record {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            color: white;
+        }
+        .latest-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .latest-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .latest-unit {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .history-section {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .history-date {
+            font-size: 14px;
+            color: #666;
+        }
+        .history-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        .history-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+        .status-normal {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .status-high {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .status-low {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🩺 尿酸记录</h1>
+            <p>记录并追踪您的尿酸水平</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="date" id="dateInput" required>
+                <input type="number" id="valueInput" placeholder="尿酸值" step="0.1" required>
+                <button class="btn" onclick="addRecord()">记录</button>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="exportData()">导出数据</button>
+                <button class="btn btn-secondary" onclick="clearAll()">清空</button>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <div class="chart-tabs">
+                <div class="chart-tab active" onclick="switchRange(7)">7天</div>
+                <div class="chart-tab" onclick="switchRange(30)">30天</div>
+                <div class="chart-tab" onclick="switchRange(90)">90天</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="avgValue">--</div>
+                    <div class="stat-label">平均值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="maxValue">--</div>
+                    <div class="stat-label">最高值</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="minValue">--</div>
+                    <div class="stat-label">最低值</div>
+                </div>
+            </div>
+            <div class="latest-record" id="latestRecord">
+                <div>
+                    <div class="latest-label">最新记录</div>
+                    <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;" id="latestDate">暂无记录</div>
+                </div>
+                <div>
+                    <span class="latest-value" id="latestValue">--</span>
+                    <span class="latest-unit">μmol/L</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <div class="section-title">
+                <span>历史记录</span>
+                <span style="font-size: 12px; color: #999;">共 <span id="totalCount">0</span> 条</span>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 17v-2H4.5A2.5 2.5 0 0 1 2 12.5v-9A2.5 2.5 0 0 1 4.5 1h9A2.5 2.5 0 0 1 16 3.5V9h-2V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5H9z"/>
+                        <path d="M20 12v5.5a2.5 2.5 0 0 1-2.5 2.5h-9a2.5 2.5 0 0 1-2.5-2.5V12"/>
+                        <path d="M12 12v8"/>
+                        <path d="M8 16l4 4 4-4"/>
+                    </svg>
+                    <p>暂无记录，请添加第一条数据</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'uric_acid_records';
+        let chart = null;
+        let currentRange = 7;
+
+        // 尿酸参考范围 (μmol/L)
+        const REFERENCE = {
+            male: { min: 208, max: 428 },
+            female: { min: 155, max: 357 }
+        };
+
+        // 初始化
+        function init() {
+            // 设置默认日期为今天
+            document.getElementById('dateInput').value = new Date().toISOString().split('T')[0];
+            
+            // 加载数据并渲染
+            loadData();
+        }
+
+        // 获取所有记录
+        function getRecords() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // 保存记录
+        function saveRecords(records) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        }
+
+        // 添加记录
+        function addRecord() {
+            const dateInput = document.getElementById('dateInput');
+            const valueInput = document.getElementById('valueInput');
+            
+            const date = dateInput.value;
+            const value = parseFloat(valueInput.value);
+            
+            if (!date || isNaN(value) || value <= 0) {
+                alert('请输入有效的日期和尿酸值');
+                return;
+            }
+            
+            const records = getRecords();
+            
+            // 检查是否已有同一天的记录
+            const existingIndex = records.findIndex(r => r.date === date);
+            if (existingIndex >= 0) {
+                if (confirm('该日期已有记录，是否覆盖？')) {
+                    records[existingIndex].value = value;
+                } else {
+                    return;
+                }
+            } else {
+                records.push({ date, value, timestamp: Date.now() });
+            }
+            
+            // 按日期排序
+            records.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            saveRecords(records);
+            valueInput.value = '';
+            loadData();
+            
+            // 显示成功提示
+            showToast('记录已保存');
+        }
+
+        // 删除单条记录
+        function deleteRecord(date) {
+            if (!confirm('确定要删除这条记录吗？')) return;
+            
+            let records = getRecords();
+            records = records.filter(r => r.date !== date);
+            saveRecords(records);
+            loadData();
+            showToast('记录已删除');
+        }
+
+        // 清空所有数据
+        function clearAll() {
+            if (!confirm('确定要清空所有记录吗？此操作不可恢复。')) return;
+            
+            localStorage.removeItem(STORAGE_KEY);
+            loadData();
+            showToast('所有记录已清空');
+        }
+
+        // 导出数据
+        function exportData() {
+            const records = getRecords();
+            if (records.length === 0) {
+                alert('暂无数据可导出');
+                return;
+            }
+            
+            let csv = '日期,尿酸值(μmol/L),状态\n';
+            records.forEach(r => {
+                const status = getStatus(r.value);
+                csv += `${r.date},${r.value},${status}\n`;
+            });
+            
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `尿酸记录_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showToast('数据已导出');
+        }
+
+        // 获取状态
+        function getStatus(value) {
+            if (value > 428) return '偏高';
+            if (value < 208) return '偏低';
+            return '正常';
+        }
+
+        // 获取状态样式
+        function getStatusClass(value) {
+            if (value > 428) return 'status-high';
+            if (value < 208) return 'status-low';
+            return 'status-normal';
+        }
+
+        // 切换时间范围
+        function switchRange(days) {
+            currentRange = days;
+            
+            // 更新标签样式
+            document.querySelectorAll('.chart-tab').forEach((tab, index) => {
+                tab.classList.toggle('active', 
+                    (days === 7 && index === 0) || 
+                    (days === 30 && index === 1) || 
+                    (days === 90 && index === 2)
+                );
+            });
+            
+            renderChart();
+        }
+
+        // 渲染图表
+        function renderChart() {
+            const records = getRecords();
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            // 筛选数据
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - currentRange);
+            
+            const filteredRecords = records.filter(r => new Date(r.date) >= cutoffDate);
+            
+            const labels = filteredRecords.map(r => {
+                const date = new Date(r.date);
+                return `${date.getMonth() + 1}/${date.getDate()}`;
+            });
+            const values = filteredRecords.map(r => r.value);
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            if (filteredRecords.length === 0) {
+                // 无数据时显示提示
+                ctx.font = '14px sans-serif';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('暂无数据', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                return;
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '尿酸值 (μmol/L)',
+                        data: values,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#4CAF50',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' μmol/L';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: '#f0f0f0'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 加载并显示数据
+        function loadData() {
+            const records = getRecords();
+            
+            // 更新统计
+            updateStats(records);
+            
+            // 更新历史列表
+            updateHistoryList(records);
+            
+            // 渲染图表
+            renderChart();
+        }
+
+        // 更新统计
+        function updateStats(records) {
+            const totalCount = document.getElementById('totalCount');
+            const avgValue = document.getElementById('avgValue');
+            const maxValue = document.getElementById('maxValue');
+            const minValue = document.getElementById('minValue');
+            const latestDate = document.getElementById('latestDate');
+            const latestValue = document.getElementById('latestValue');
+            
+            totalCount.textContent = records.length;
+            
+            if (records.length === 0) {
+                avgValue.textContent = '--';
+                maxValue.textContent = '--';
+                minValue.textContent = '--';
+                latestDate.textContent = '暂无记录';
+                latestValue.textContent = '--';
+                return;
+            }
+            
+            const values = records.map(r => r.value);
+            const avg = values.reduce((a, b) => a + b, 0) / values.length;
+            const max = Math.max(...values);
+            const min = Math.min(...values);
+            
+            avgValue.textContent = avg.toFixed(1);
+            maxValue.textContent = max.toFixed(1);
+            minValue.textContent = min.toFixed(1);
+            
+            const latest = records[records.length - 1];
+            latestDate.textContent = latest.date;
+            latestValue.textContent = latest.value.toFixed(1);
+            
+            // 根据最新值改变颜色
+            const latestRecord = document.querySelector('.latest-record');
+            if (latest.value > 428) {
+                latestRecord.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+            } else if (latest.value < 208) {
+                latestRecord.style.background = 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+            } else {
+                latestRecord.style.background = 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
+            }
+        }
+
+        // 更新历史列表
+        function updateHistoryList(records) {
+            const historyList = document.getElementById('historyList');
+            
+            if (records.length === 0) {
+                historyList.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 17v-2H4.5A2.5 2.5 0 0 1 2 12.5v-9A2.5 2.5 0 0 1 4.5 1h9A2.5 2.5 0 0 1 16 3.5V9h-2V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5H9z"/>
+                            <path d="M20 12v5.5a2.5 2.5 0 0 1-2.5 2.5h-9a2.5 2.5 0 0 1-2.5-2.5V12"/>
+                            <path d="M12 12v8"/>
+                            <path d="M8 16l4 4 4-4"/>
+                        </svg>
+                        <p>暂无记录，请添加第一条数据</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 倒序显示
+            const reversed = [...records].reverse();
+            
+            historyList.innerHTML = reversed.map(r => `
+                <div class="history-item">
+                    <span class="history-date">${r.date}</span>
+                    <div>
+                        <span class="history-value">${r.value.toFixed(1)}</span>
+                        <span class="history-status ${getStatusClass(r.value)}">${getStatus(r.value)}</span>
+                        <button onclick="deleteRecord('${r.date}')" style="margin-left: 8px; background: none; border: none; color: #999; cursor: pointer; font-size: 12px;">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 显示提示
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #333;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 24px;
+                font-size: 14px;
+                z-index: 1000;
+                animation: fadeInOut 2s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 2000);
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                20% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                80% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 页面加载时初始化
+        init();
+    </script>
+</body>
+</html>
