@@ -148,14 +148,14 @@
         <div id="tab-record" class="tab-content active">
             <div class="card">
                 <div class="card-title">📝 添加记录</div>
-                <div class="input-row">
-                    <input type="date" id="dateInput">
-                    <input type="number" id="valueInput" placeholder="尿酸值 μmol/L" step="0.1">
-                    <button class="btn" onclick="addRecord()">记录</button>
+                <div class="input-row" style="flex-wrap: wrap;">
+                    <input type="date" id="dateInput" style="flex: 1; min-width: 120px;">
+                    <input type="number" id="valueInput" placeholder="尿酸值 μmol/L" step="0.1" style="flex: 2; min-width: 150px;">
                 </div>
-                <div style="display:flex; gap:8px; justify-content:flex-end;">
-                    <button class="btn btn-sm btn-secondary" onclick="exportData()">导出</button>
-                    <button class="btn btn-sm btn-secondary" onclick="clearAll()">清空</button>
+                <button class="btn" onclick="addRecord()" style="width: 100%; margin-top: 10px; padding: 14px; font-size: 16px;">💾 保存记录</button>
+                <div style="display:flex; gap:8px; justify-content:flex-end; margin-top: 12px;">
+                    <button class="btn btn-sm btn-secondary" onclick="exportData()">📥 导出</button>
+                    <button class="btn btn-sm btn-secondary" onclick="clearAll()">🗑️ 清空</button>
                 </div>
             </div>
             
