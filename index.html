@@ -257,6 +257,7 @@ const foodData = [
     {name: "花生", purine: 79, unit: "mg/100g", level: "medium"},
     {name: "菠菜", purine: 57, unit: "mg/100g", level: "medium"},
     {name: "芦笋", purine: 50, unit: "mg/100g", level: "medium"},
+    {name: "豌豆尖", purine: 58, unit: "mg/100g", level: "medium"},
     // 低嘌呤(<50)
     {name: "鸡蛋", purine: 3, unit: "mg/100g", level: "low"},
     {name: "牛奶", purine: 1, unit: "mg/100g", level: "low"},
@@ -451,9 +452,27 @@ function loadRecords() {
 }
 
 // ========== 饮食查询功能 ==========
+// 分类映射表
+const categoryMap = {
+    '火锅': ['火锅汤底', '浓肉汤'],
+    '海鲜': ['凤尾鱼', '沙丁鱼', '带鱼', '鲢鱼', '牡蛎', '干贝', '小鱼干', '龙虾', '螃蟹', '虾', '蛤蜊'],
+    '肉类': ['动物内脏', '猪肝', '鸡肝', '鸭肝', '猪肉', '牛肉', '羊肉', '鸡肉', '鸭肉'],
+    '蔬菜': ['扁豆', '黄豆', '菠菜', '芦笋', '豌豆尖', '大白菜', '卷心菜', '胡萝卜', '黄瓜', '西红柿', '土豆']
+};
+
 function renderFoodList(filter = '') {
     const container = document.getElementById('foodList');
-    const filtered = filter ? foodData.filter(f => f.name.includes(filter)) : foodData;
+    let filtered = foodData;
+    
+    if (filter) {
+        // 检查是否是分类关键词
+        if (categoryMap[filter]) {
+            filtered = foodData.filter(f => categoryMap[filter].includes(f.name));
+        } else {
+            // 普通名称搜索
+            filtered = foodData.filter(f => f.name.includes(filter));
+        }
+    }
     const high = filtered.filter(f => f.level === 'high');
     const medium = filtered.filter(f => f.level === 'medium');
     const low = filtered.filter(f => f.level === 'low');
