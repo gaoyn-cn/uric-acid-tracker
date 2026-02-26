@@ -108,12 +108,35 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🩺 尿酸管理助手</h1>
-            <p>记录 · 查询 · 学习</p>
+        <!-- 顶部搜索 - 最核心功能 -->
+        <div class="header" style="margin-bottom: 12px;">
+            <h1>🥗 嘌呤查询助手</h1>
+            <p style="font-size: 12px; color: #888;">吃饭前查一查，痛风不犯难</p>
+        </div>
+        
+        <!-- 核心搜索框 -->
+        <div class="search-card" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(76,175,80,0.3);">
+            <div style="color: white; font-size: 14px; margin-bottom: 10px; opacity: 0.9;">🔍 查食物嘌呤含量</div>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="quickSearch" placeholder="输入食物名称，如：牛肉、豆腐..." 
+                    style="flex: 1; padding: 14px 16px; border: none; border-radius: 12px; font-size: 16px; outline: none;"
+                    onkeypress="if(event.key==='Enter'){quickSearchFood();}">
+                <button onclick="quickSearchFood()" 
+                    style="padding: 14px 24px; background: white; color: #4CAF50; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    查询
+                </button>
+            </div>
+            <!-- 快捷标签 -->
+            <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <span onclick="setQuickSearch('火锅')" style="padding: 6px 12px; background: rgba(255,255,255,0.2); color: white; border-radius: 20px; font-size: 12px; cursor: pointer;">火锅</span>
+                <span onclick="setQuickSearch('海鲜')" style="padding: 6px 12px; background: rgba(255,255,255,0.2); color: white; border-radius: 20px; font-size: 12px; cursor: pointer;">海鲜</span>
+                <span onclick="setQuickSearch('肉类')" style="padding: 6px 12px; background: rgba(255,255,255,0.2); color: white; border-radius: 20px; font-size: 12px; cursor: pointer;">肉类</span>
+                <span onclick="setQuickSearch('蔬菜')" style="padding: 6px 12px; background: rgba(255,255,255,0.2); color: white; border-radius: 20px; font-size: 12px; cursor: pointer;">蔬菜</span>
+            </div>
         </div>
         
         <!-- Tab导航 -->
+        <div class="tab-nav">
         <div class="tab-nav">
             <div class="tab-btn active" onclick="switchTab('record')">📊 记录</div>
             <div class="tab-btn" onclick="switchTab('food')">🍽️ 饮食</div>
@@ -488,6 +511,40 @@ function showToast(msg) {
     t.textContent = msg;
     document.body.appendChild(t);
     setTimeout(() => t.remove(), 1500);
+}
+
+// ========== 快速搜索功能 ==========
+function setQuickSearch(keyword) {
+    document.getElementById('quickSearch').value = keyword;
+    quickSearchFood();
+}
+
+function quickSearchFood() {
+    const keyword = document.getElementById('quickSearch').value.trim();
+    if (!keyword) {
+        showToast('请输入食物名称');
+        return;
+    }
+    
+    // 切换到饮食Tab
+    switchTabDirect('food');
+    
+    // 设置搜索框值并触发搜索
+    document.getElementById('foodSearch').value = keyword;
+    searchFood();
+    
+    // 记录到最近搜索（可扩展）
+    console.log('快速搜索:', keyword);
+}
+
+function switchTabDirect(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    // 激活对应tab
+    const tabIndex = tab === 'record' ? 0 : tab === 'food' ? 1 : 2;
+    document.querySelectorAll('.tab-btn')[tabIndex].classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
 }
 
 // 启动
